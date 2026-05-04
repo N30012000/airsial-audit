@@ -1,9 +1,7 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
 from datetime import datetime
 import json
-import os
 
 # Page config
 st.set_page_config(
@@ -36,8 +34,12 @@ st.markdown(f"""
     }}
     
     /* Sidebar */
-    [data-testid="stSidebar"] > div:first-child {{
-        background-color: {PRIMARY_GREEN};
+    [data-testid="stSidebar"] {{
+        background-color: {PRIMARY_GREEN} !important;
+    }}
+    
+    [data-testid="stSidebar"] h2, [data-testid="stSidebar"] p {{
+        color: white !important;
     }}
     
     /* Metrics */
@@ -59,20 +61,26 @@ st.markdown(f"""
         background-color: {DARK_GREEN};
     }}
     
-    /* Text input */
-    .stTextInput > div > div > input {{
-        border-color: {PRIMARY_GREEN};
-    }}
-    
-    /* Selectbox */
-    .stSelectbox > div > div > select {{
-        border-color: {PRIMARY_GREEN};
-    }}
-    
-    /* Form inputs focus */
-    input:focus, select:focus, textarea:focus {{
+    /* Form elements */
+    .stTextInput > div > div > input,
+    .stTextArea > div > div > textarea,
+    .stSelectbox > div > div > select,
+    .stDateInput > div > div > input {{
         border-color: {PRIMARY_GREEN} !important;
-        box-shadow: 0 0 0 2px rgba(30, 126, 52, 0.2) !important;
+    }}
+    
+    /* Form label */
+    .stTextInput > label,
+    .stTextArea > label,
+    .stSelectbox > label,
+    .stDateInput > label {{
+        color: {DARK_GREEN} !important;
+        font-weight: 600 !important;
+    }}
+    
+    /* Radio buttons */
+    .stRadio > label {{
+        color: {DARK_GREEN} !important;
     }}
     
     /* Data tables */
@@ -80,14 +88,22 @@ st.markdown(f"""
         background-color: white;
     }}
     
-    /* Success messages */
+    /* Success/Info messages */
     .stSuccess {{
-        background-color: {ACCENT_GREEN};
+        background-color: {ACCENT_GREEN} !important;
+    }}
+    
+    .stInfo {{
+        background-color: {LIGHT_GREEN} !important;
+    }}
+    
+    .stWarning {{
+        background-color: #F97316 !important;
     }}
     
     /* Dividers */
     hr {{
-        border-color: {PRIMARY_GREEN};
+        border-color: {PRIMARY_GREEN} !important;
     }}
 </style>
 """, unsafe_allow_html=True)
@@ -106,8 +122,8 @@ def init_session_state():
 
     if 'mor_data' not in st.session_state:
         st.session_state.mor_data = pd.DataFrame({
-            'Date': ['23/03/2026', '46268', '46084', '45940', '13/08/2025'],
-            'Flight': ['PF-768', 'PF-1785', 'pf-714', 'PF-717', 'PF-786'],
+            'Date': ['23/03/2026', '15/03/2026', '08/03/2026', '01/03/2026', '13/08/2025'],
+            'Flight': ['PF-768', 'PF-1785', 'PF-714', 'PF-717', 'PF-786'],
             'Aircraft': ['AP-BOR', 'AP-BPH', 'AP-BOA', 'AP-BOR', 'AP-BOC'],
             'Issue': ['Pressurization valve failure', 'FOD ingestion engine 2', 'Both PACKS failed', 'Near collision - TCAS', 'L1 door without disarm'],
             'Damage': ['None', 'None', 'None', 'None', 'None'],
@@ -116,8 +132,8 @@ def init_session_state():
 
     if 'hira_data' not in st.session_state:
         st.session_state.hira_data = pd.DataFrame({
-            'Date': ['46085', '46174', '46358', '46328', '18/12/2025'],
-            'Reporter': ['Abdul Moied', 'Faheem Haris', 'Raza Haider', 'Adeeb Arshad', 'N/A'],
+            'Date': ['25/04/2026', '20/04/2026', '15/04/2026', '10/04/2026', '18/12/2025'],
+            'Reporter': ['Abdul Moied', 'Faheem Haris', 'Raza Haider', 'Adeeb Arshad', 'Safety Team'],
             'Department': ['Safety', 'Engineering', 'Engineering', 'Engineering', 'Operations'],
             'Hazard': ['Staff without PPE', 'Engines running during maintenance', 'GPU unattended', 'Waste cart fire', 'Unsupervised passengers'],
             'Risk Level': ['High', 'Medium', 'High', 'High', 'Medium'],
@@ -126,7 +142,7 @@ def init_session_state():
 
     if 'bird_data' not in st.session_state:
         st.session_state.bird_data = pd.DataFrame({
-            'Date': ['20/04/2026', '16/04/2026', '46330', '26/03/2026', '14/02/2026'],
+            'Date': ['20/04/2026', '16/04/2026', '12/04/2026', '26/03/2026', '14/02/2026'],
             'Flight': ['PF-732', 'PF-741', 'PF-742', 'PF-142', 'PF-121'],
             'Aircraft': ['AP-BPF', 'AP-BPJ', 'AP-BPF', 'AP-BOA', 'AP-BOA'],
             'Phase': ['Climb', 'Descend', 'Takeoff/Climb', 'Takeoff', 'Takeoff'],
@@ -142,7 +158,11 @@ with col1:
     st.title("✈️ AirSial Safety Dashboard")
     st.markdown("**Comprehensive Safety & Incident Reporting System** | Audit Ready")
 with col2:
-    st.markdown(f"<div style='background-color: {PRIMARY_GREEN}; color: white; padding: 20px; border-radius: 10px; text-align: center;'><h3>AirSial</h3></div>", unsafe_allow_html=True)
+    st.markdown(f"""
+    <div style='background-color: {PRIMARY_GREEN}; color: white; padding: 20px; border-radius: 10px; text-align: center;'>
+        <h3 style='margin: 0; color: white;'>🟢 AirSial</h3>
+    </div>
+    """, unsafe_allow_html=True)
 
 st.markdown("---")
 
@@ -157,7 +177,7 @@ with st.sidebar:
 
 # DASHBOARD PAGE
 if page == "📊 Dashboard":
-    st.header("Safety Overview Dashboard")
+    st.header("📊 Safety Overview Dashboard")
     
     col1, col2, col3, col4 = st.columns(4)
     with col1:
@@ -174,53 +194,41 @@ if page == "📊 Dashboard":
     col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader("FSR by Category")
+        st.subheader("📊 FSR by Category")
         if len(st.session_state.fsr_data) > 0:
             fsr_cat = st.session_state.fsr_data['Category'].value_counts()
-            fig = px.pie(values=fsr_cat.values, names=fsr_cat.index, 
-                         color_discrete_sequence=[PRIMARY_GREEN, LIGHT_GREEN, ACCENT_GREEN, "#17A398", "#2E8B57"])
-            fig.update_layout(showlegend=True, height=350)
-            st.plotly_chart(fig, use_container_width=True)
+            st.bar_chart(fsr_cat, color=PRIMARY_GREEN)
         else:
             st.info("No data yet")
     
     with col2:
-        st.subheader("MOR Status Distribution")
+        st.subheader("📊 MOR Status Distribution")
         if len(st.session_state.mor_data) > 0:
             mor_status = st.session_state.mor_data['Status'].value_counts()
-            fig = px.bar(x=mor_status.index, y=mor_status.values,
-                         color_discrete_sequence=[PRIMARY_GREEN, LIGHT_GREEN])
-            fig.update_layout(xaxis_title="Status", yaxis_title="Count", height=350)
-            st.plotly_chart(fig, use_container_width=True)
+            st.bar_chart(mor_status, color=LIGHT_GREEN)
         else:
             st.info("No data yet")
     
     col1, col2 = st.columns(2)
     with col1:
-        st.subheader("HIRA Risk Distribution")
+        st.subheader("📊 HIRA Risk Distribution")
         if len(st.session_state.hira_data) > 0:
             hira_risk = st.session_state.hira_data['Risk Level'].value_counts()
-            fig = px.bar(x=hira_risk.index, y=hira_risk.values,
-                         color_discrete_sequence=["#84CC16", "#F97316", "#EF4444"])
-            fig.update_layout(xaxis_title="Risk Level", yaxis_title="Count", height=350)
-            st.plotly_chart(fig, use_container_width=True)
+            st.bar_chart(hira_risk, color=ACCENT_GREEN)
         else:
             st.info("No data yet")
     
     with col2:
-        st.subheader("Bird Strike by Phase")
+        st.subheader("📊 Bird Strike by Phase")
         if len(st.session_state.bird_data) > 0:
             bird_phase = st.session_state.bird_data['Phase'].value_counts()
-            fig = px.pie(values=bird_phase.values, names=bird_phase.index,
-                         color_discrete_sequence=[PRIMARY_GREEN, LIGHT_GREEN, ACCENT_GREEN, "#17A398"])
-            fig.update_layout(height=350)
-            st.plotly_chart(fig, use_container_width=True)
+            st.bar_chart(bird_phase, color=PRIMARY_GREEN)
         else:
             st.info("No data yet")
 
 # FSR REPORTS PAGE
 elif page == "📝 FSR Reports":
-    st.header("Flight Safety Reports (FSR)")
+    st.header("📝 Flight Safety Reports (FSR)")
     st.markdown("_In-flight incidents including medical emergencies, disruptive passengers, and safety concerns_")
     
     col1, col2 = st.columns([2, 1])
@@ -258,17 +266,20 @@ elif page == "📝 FSR Reports":
             action_taken = st.text_area("✅ Action Taken", height=100)
             
             if st.form_submit_button("➕ Add FSR Report", use_container_width=True):
-                new_row = pd.DataFrame({
-                    'Date': [date.strftime("%d/%m/%Y")],
-                    'Flight': [flight.upper()],
-                    'Aircraft': [aircraft.upper()],
-                    'Category': [category],
-                    'Incident': [incident],
-                    'Action Taken': [action_taken]
-                })
-                st.session_state.fsr_data = pd.concat([new_row, st.session_state.fsr_data], ignore_index=True)
-                st.success("✅ FSR Report added successfully!")
-                st.balloons()
+                if flight.strip() and aircraft.strip() and incident.strip():
+                    new_row = pd.DataFrame({
+                        'Date': [date.strftime("%d/%m/%Y")],
+                        'Flight': [flight.upper()],
+                        'Aircraft': [aircraft.upper()],
+                        'Category': [category],
+                        'Incident': [incident],
+                        'Action Taken': [action_taken]
+                    })
+                    st.session_state.fsr_data = pd.concat([new_row, st.session_state.fsr_data], ignore_index=True)
+                    st.success("✅ FSR Report added successfully!")
+                    st.rerun()
+                else:
+                    st.error("⚠️ Please fill in all required fields!")
     
     elif action == "✏️ Edit/Delete Report":
         st.subheader("Edit or Delete FSR Report")
@@ -306,6 +317,7 @@ elif page == "📝 FSR Reports":
                         st.session_state.fsr_data.at[report_idx, 'Incident'] = incident
                         st.session_state.fsr_data.at[report_idx, 'Action Taken'] = action_taken
                         st.success("✅ Report updated successfully!")
+                        st.rerun()
                 
                 with col2:
                     if st.form_submit_button("🗑️ Delete Report", use_container_width=True):
@@ -317,7 +329,7 @@ elif page == "📝 FSR Reports":
 
 # MOR REPORTS PAGE
 elif page == "🔧 MOR Reports":
-    st.header("Maintenance Occurrence Reports (MOR)")
+    st.header("🔧 Maintenance Occurrence Reports (MOR)")
     st.markdown("_Technical and mechanical incidents reported by flight crews and maintenance teams_")
     
     col1, col2 = st.columns([2, 1])
@@ -356,17 +368,20 @@ elif page == "🔧 MOR Reports":
             status = st.selectbox("📊 Status", ["Open", "In Progress", "Resolved"], key="mor_status")
             
             if st.form_submit_button("➕ Add MOR Report", use_container_width=True):
-                new_row = pd.DataFrame({
-                    'Date': [date.strftime("%d/%m/%Y")],
-                    'Flight': [flight.upper()],
-                    'Aircraft': [aircraft.upper()],
-                    'Issue': [issue],
-                    'Damage': [damage],
-                    'Status': [status]
-                })
-                st.session_state.mor_data = pd.concat([new_row, st.session_state.mor_data], ignore_index=True)
-                st.success("✅ MOR Report added successfully!")
-                st.balloons()
+                if flight.strip() and aircraft.strip() and description.strip():
+                    new_row = pd.DataFrame({
+                        'Date': [date.strftime("%d/%m/%Y")],
+                        'Flight': [flight.upper()],
+                        'Aircraft': [aircraft.upper()],
+                        'Issue': [issue],
+                        'Damage': [damage],
+                        'Status': [status]
+                    })
+                    st.session_state.mor_data = pd.concat([new_row, st.session_state.mor_data], ignore_index=True)
+                    st.success("✅ MOR Report added successfully!")
+                    st.rerun()
+                else:
+                    st.error("⚠️ Please fill in all required fields!")
     
     elif action == "✏️ Edit/Delete Report":
         st.subheader("Edit or Delete MOR Report")
@@ -405,6 +420,7 @@ elif page == "🔧 MOR Reports":
                         st.session_state.mor_data.at[report_idx, 'Damage'] = damage
                         st.session_state.mor_data.at[report_idx, 'Status'] = status
                         st.success("✅ Report updated successfully!")
+                        st.rerun()
                 
                 with col2:
                     if st.form_submit_button("🗑️ Delete Report", use_container_width=True):
@@ -416,7 +432,7 @@ elif page == "🔧 MOR Reports":
 
 # HIRA PAGE
 elif page == "⚠️ HIRA Assessments":
-    st.header("HIRA - Hazard Identification & Risk Assessment")
+    st.header("⚠️ HIRA - Hazard Identification & Risk Assessment")
     st.markdown("_Safety hazards identified across operations with risk ratings and corrective actions_")
     
     col1, col2 = st.columns([2, 1])
@@ -455,17 +471,20 @@ elif page == "⚠️ HIRA Assessments":
             status = st.selectbox("📊 Status", ["Open", "In Progress", "Closed"], key="hira_status")
             
             if st.form_submit_button("➕ Add HIRA Assessment", use_container_width=True):
-                new_row = pd.DataFrame({
-                    'Date': [date.strftime("%d/%m/%Y")],
-                    'Reporter': [reporter],
-                    'Department': [department],
-                    'Hazard': [hazard],
-                    'Risk Level': [risk_level],
-                    'Status': [status]
-                })
-                st.session_state.hira_data = pd.concat([new_row, st.session_state.hira_data], ignore_index=True)
-                st.success("✅ HIRA Assessment added successfully!")
-                st.balloons()
+                if reporter.strip() and hazard.strip():
+                    new_row = pd.DataFrame({
+                        'Date': [date.strftime("%d/%m/%Y")],
+                        'Reporter': [reporter],
+                        'Department': [department],
+                        'Hazard': [hazard],
+                        'Risk Level': [risk_level],
+                        'Status': [status]
+                    })
+                    st.session_state.hira_data = pd.concat([new_row, st.session_state.hira_data], ignore_index=True)
+                    st.success("✅ HIRA Assessment added successfully!")
+                    st.rerun()
+                else:
+                    st.error("⚠️ Please fill in all required fields!")
     
     elif action == "✏️ Edit/Delete Report":
         st.subheader("Edit or Delete HIRA Assessment")
@@ -503,6 +522,7 @@ elif page == "⚠️ HIRA Assessments":
                         st.session_state.hira_data.at[report_idx, 'Risk Level'] = risk_level
                         st.session_state.hira_data.at[report_idx, 'Status'] = status
                         st.success("✅ Assessment updated successfully!")
+                        st.rerun()
                 
                 with col2:
                     if st.form_submit_button("🗑️ Delete Assessment", use_container_width=True):
@@ -514,7 +534,7 @@ elif page == "⚠️ HIRA Assessments":
 
 # BIRD STRIKE PAGE
 elif page == "🐦 Bird Strikes":
-    st.header("Bird Strike Incidents")
+    st.header("🐦 Bird Strike Incidents")
     st.markdown("_All recorded bird strike events with aircraft damage assessment and operational phases_")
     
     col1, col2 = st.columns([2, 1])
@@ -553,17 +573,20 @@ elif page == "🐦 Bird Strikes":
             remarks = st.text_area("📝 Remarks", key="bird_remarks", height=100)
             
             if st.form_submit_button("➕ Add Bird Strike Report", use_container_width=True):
-                new_row = pd.DataFrame({
-                    'Date': [date.strftime("%d/%m/%Y")],
-                    'Flight': [flight.upper()],
-                    'Aircraft': [aircraft.upper()],
-                    'Phase': [phase],
-                    'Parts Affected': [parts],
-                    'Damage': [damage]
-                })
-                st.session_state.bird_data = pd.concat([new_row, st.session_state.bird_data], ignore_index=True)
-                st.success("✅ Bird Strike Report added successfully!")
-                st.balloons()
+                if flight.strip() and aircraft.strip():
+                    new_row = pd.DataFrame({
+                        'Date': [date.strftime("%d/%m/%Y")],
+                        'Flight': [flight.upper()],
+                        'Aircraft': [aircraft.upper()],
+                        'Phase': [phase],
+                        'Parts Affected': [parts],
+                        'Damage': [damage]
+                    })
+                    st.session_state.bird_data = pd.concat([new_row, st.session_state.bird_data], ignore_index=True)
+                    st.success("✅ Bird Strike Report added successfully!")
+                    st.rerun()
+                else:
+                    st.error("⚠️ Please fill in all required fields!")
     
     elif action == "✏️ Edit/Delete Report":
         st.subheader("Edit or Delete Bird Strike Report")
@@ -601,6 +624,7 @@ elif page == "🐦 Bird Strikes":
                         st.session_state.bird_data.at[report_idx, 'Parts Affected'] = parts
                         st.session_state.bird_data.at[report_idx, 'Damage'] = damage
                         st.success("✅ Report updated successfully!")
+                        st.rerun()
                 
                 with col2:
                     if st.form_submit_button("🗑️ Delete Report", use_container_width=True):
